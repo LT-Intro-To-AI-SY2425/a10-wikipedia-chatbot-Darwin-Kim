@@ -140,6 +140,27 @@ def polar_radius(matches: List[str]) -> List[str]:
     """
     return [get_polar_radius(matches[0])]
 
+def get_spouses(name):
+    infobox_text= clean_text(get_first_infobox_text(get_page_html(name)))
+    pattern=r"([\w ]+)\s* \(m\.[\w ]+"
+    p = re.compile(pattern, re.DOTALL | re.IGNORECASE)
+    match = p.findall(infobox_text)
+    return match
+
+def get_deathdate(name):
+    infobox_text= clean_text(get_first_infobox_text(get_page_html(name)))
+    pattern=r"Died([\w, ]+\([\d-]+\))"
+    error_text='input is still alive.'
+    match= get_match(infobox_text, pattern, error_text)
+    return match.group(1)
+
+def get_birthplace(name):
+    infobox_text= clean_text(get_first_infobox_text(get_page_html(name)))
+    pattern=r"Born[\w ]*\([\d-]+\) ?(\d*\w*,? ){2}\d{4}(\s*\(.*\))?([A-Za-z ]*,[A-Za-z ]*)"
+    error_text="No data on birthplace. Ensure that input is a person, not a food, idea, etc."
+    match= get_match(infobox_text, pattern)
+    return match.group(3)
+
 
 # dummy argument is ignored and doesn't matter
 def bye_action(dummy: List[str]) -> None:
@@ -156,6 +177,9 @@ Action = Callable[[List[str]], List[Any]]
 pa_list: List[Tuple[Pattern, Action]] = [
     ("when was % born".split(), birth_date),
     ("what is the polar radius of %".split(), polar_radius),
+    ("who was % married to".split(), get_spouses),
+    ("when did % die".split(), get_deathdate),
+    ("where was % born".split(), get_birthplace),
     (["bye"], bye_action),
 ]
 
@@ -184,20 +208,18 @@ def search_pa_list(src: List[str]) -> List[str]:
 def query_loop() -> None:
     """The simple query loop. The try/except structure is to catch Ctrl-C or Ctrl-D
     characters and exit gracefully"""
-    print("Welcome to the movie database!\n")
+    print("Welcome to the Wikipedia database!\n")
     while True:
         try:
             print()
             query = input("Your query? ").replace("?", "").lower().split()
             answers = search_pa_list(query)
-            for ans in answers:
-                print(ans)
+            print(answers)
 
         except (KeyboardInterrupt, EOFError):
             break
 
     print("\nSo long!\n")
-
-
+#print(clean_text(get_first_infobox_text(get_page_html('Albert Einstein'))))
 # uncomment the next line once you've implemented everything are ready to try it out
 query_loop()
